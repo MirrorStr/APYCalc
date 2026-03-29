@@ -1,0 +1,3 @@
+# 排除 README.md 被当作首页
+exclude:
+  - README.md
