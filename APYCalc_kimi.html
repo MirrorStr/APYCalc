@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>年化收益率计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            color: #f8fafc;
+            padding: 20px;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
+        .card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .currency {
+            position: absolute;
+            left: 16px;
+            color: #60a5fa;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid rgba(96, 165, 250, 0.2);
+            border-radius: 16px;
+            padding: 16px 16px 16px 40px;
+            color: #f8fafc;
+            font-size: 18px;
+            font-weight: 600;
+            outline: none;
+            transition: all 0.3s ease;
+            -webkit-appearance: none;
+        }
+        
+        input[type="number"]:focus {
+            border-color: #60a5fa;
+            background: rgba(15, 23, 42, 0.95);
+            box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
+        }
+        
+        input[type="number"]::placeholder {
+            color: #475569;
+        }
+        
+        .days-input {
+            padding-left: 16px !important;
+        }
+        
+        .unit {
+            position: absolute;
+            right: 16px;
+            color: #64748b;
+            font-size: 14px;
+        }
+        
+        .quick-days {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .quick-btn {
+            background: rgba(96, 165, 250, 0.1);
+            border: 1px solid rgba(96, 165, 250, 0.2);
+            color: #60a5fa;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quick-btn:hover, .quick-btn:active {
+            background: rgba(96, 165, 250, 0.2);
+            transform: scale(0.95);
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border: none;
+            color: white;
+            padding: 18px;
+            border-radius: 16px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.5);
+            margin-top: 10px;
+        }
+        
+        .calculate-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 5px 15px -5px rgba(59, 130, 246, 0.5);
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            display: none;
+            animation: slideUp 0.4s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .result-label {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+        
+        .result-value {
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+        
+        .result-detail {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .detail-item {
+            text-align: center;
+        }
+        
+        .detail-label {
+            color: #64748b;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        
+        .detail-value {
+            color: #f8fafc;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .positive { color: #34d399; }
+        .negative { color: #f87171; }
+        
+        .history {
+            margin-top: 20px;
+        }
+        
+        .history-title {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .clear-history {
+            font-size: 12px;
+            color: #60a5fa;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .history-item {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .history-info {
+            flex: 1;
+        }
+        
+        .history-date {
+            color: #64748b;
+            font-size: 11px;
+            margin-bottom: 2px;
+        }
+        
+        .history-params {
+            color: #94a3b8;
+            font-size: 12px;
+        }
+        
+        .history-result {
+            text-align: right;
+        }
+        
+        .history-rate {
+            font-weight: 700;
+            font-size: 16px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #475569;
+            font-size: 14px;
+        }
+        
+        .formula-hint {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .formula-hint-title {
+            color: #fbbf24;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .formula {
+            color: #fcd34d;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+        }
+        
+        /* 防止 iOS 缩放 */
+        @supports (-webkit-touch-callout: none) {
+            input, select, textarea {
+                font-size: 16px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>年化收益率计算器</h1>
+            <p class="subtitle">精确计算您的投资回报率</p>
+        </header>
+        
+        <div class="formula-hint">
+            <div class="formula-hint-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                计算公式
+            </div>
+            <div class="formula">
+                年化收益率 = (本金+收益)/本金)^(365/天数) - 1
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="input-group">
+                <label>投资本金</label>
+                <div class="input-wrapper">
+                    <span class="currency">¥</span>
+                    <input type="number" id="principal" placeholder="10000" step="0.01" min="0">
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>投资收益</label>
+                <div class="input-wrapper">
+                    <span class="currency">¥</span>
+                    <input type="number" id="profit" placeholder="500" step="0.01">
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>投资时间</label>
+                <div class="input-wrapper">
+                    <input type="number" id="days" class="days-input" placeholder="30" min="1" step="1">
+                    <span class="unit">天</span>
+                </div>
+                <div class="quick-days">
+                    <button class="quick-btn" onclick="setDays(7)">7天</button>
+                    <button class="quick-btn" onclick="setDays(30)">30天</button>
+                    <button class="quick-btn" onclick="setDays(90)">3个月</button>
+                    <button class="quick-btn" onclick="setDays(180)">6个月</button>
+                    <button class="quick-btn" onclick="setDays(365)">1年</button>
+                </div>
+            </div>
+            
+            <button class="calculate-btn" onclick="calculate()">
+                计算年化收益率
+            </button>
+        </div>
+        
+        <div class="card result-card" id="resultCard">
+            <div class="result-label">年化收益率 (APR)</div>
+            <div class="result-value" id="aprResult">0.00%</div>
+            <div style="color: #64748b; font-size: 13px; margin-top: 4px;">
+                相当于每万元年收益 <span id="per10k" style="color: #60a5fa; font-weight: 600;">0</span> 元
+            </div>
+            
+            <div class="result-detail">
+                <div class="detail-item">
+                    <div class="detail-label">总收益率</div>
+                    <div class="detail-value" id="totalReturn">0.00%</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">日收益率</div>
+                    <div class="detail-value" id="dailyReturn">0.00%</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">万元日收益</div>
+                    <div class="detail-value" id="dailyPer10k">¥0.00</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">收益倍数</div>
+                    <div class="detail-value" id="multiplier">0x</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card history" id="historyCard" style="display: none;">
+            <div class="history-title">
+                <span>计算历史</span>
+                <button class="clear-history" onclick="clearHistory()">清空</button>
+            </div>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        // 加载历史记录
+        let history = JSON.parse(localStorage.getItem('aprHistory') || '[]');
+        updateHistoryUI();
+        
+        function setDays(days) {
+            document.getElementById('days').value = days;
+        }
+        
+        function calculate() {
+            const principal = parseFloat(document.getElementById('principal').value);
+            const profit = parseFloat(document.getElementById('profit').value);
+            const days = parseInt(document.getElementById('days').value);
+            
+            // 验证输入
+            if (!principal || principal <= 0) {
+                shakeInput('principal');
+                return;
+            }
+            if (isNaN(profit)) {
+                shakeInput('profit');
+                return;
+            }
+            if (!days || days <= 0) {
+                shakeInput('days');
+                return;
+            }
+            
+            // 核心计算
+            const totalAmount = principal + profit;
+            const totalReturnRate = profit / principal;
+            const apr = Math.pow(totalAmount / principal, 365 / days) - 1;
+            const dailyReturnRate = totalReturnRate / days;
+            const dailyPer10k = 10000 * dailyReturnRate;
+            const per10kYear = 10000 * apr;
+            const multiplier = totalAmount / principal;
+            
+            // 显示结果
+            const resultCard = document.getElementById('resultCard');
+            resultCard.style.display = 'block';
+            
+            // 动画显示数字
+            animateNumber('aprResult', apr * 100, '%', 2);
+            animateNumber('totalReturn', totalReturnRate * 100, '%', 2);
+            animateNumber('dailyReturn', dailyReturnRate * 100, '%', 4);
+            animateNumber('dailyPer10k', dailyPer10k, '¥', 2);
+            document.getElementById('multiplier').textContent = multiplier.toFixed(2) + 'x';
+            document.getElementById('per10k').textContent = Math.round(per10kYear);
+            
+            // 颜色标记
+            const aprElement = document.getElementById('aprResult');
+            aprElement.className = 'result-value ' + (apr >= 0 ? 'positive' : 'negative');
+            
+            // 保存历史
+            saveHistory({
+                principal,
+                profit,
+                days,
+                apr: apr * 100,
+                timestamp: new Date().toISOString()
+            });
+            
+            // 滚动到结果
+            setTimeout(() => {
+                resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+        
+        function animateNumber(id, value, suffix, decimals) {
+            const element = document.getElementById(id);
+            const start = 0;
+            const duration = 600;
+            const startTime = performance.now();
+            
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeProgress = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+                const current = start + (value - start) * easeProgress;
+                
+                let formatted;
+                if (suffix === '¥') {
+                    formatted = '¥' + current.toFixed(decimals);
+                } else {
+                    formatted = (current >= 0 ? '+' : '') + current.toFixed(decimals) + suffix;
+                }
+                element.textContent = formatted;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+            
+            requestAnimationFrame(update);
+        }
+        
+        function shakeInput(id) {
+            const input = document.getElementById(id);
+            input.style.animation = 'none';
+            input.offsetHeight; // 触发重排
+            input.style.animation = 'shake 0.5s';
+            input.focus();
+        }
+        
+        function saveHistory(record) {
+            history.unshift(record);
+            if (history.length > 10) history = history.slice(0, 10);
+            localStorage.setItem('aprHistory', JSON.stringify(history));
+            updateHistoryUI();
+        }
+        
+        function updateHistoryUI() {
+            const card = document.getElementById('historyCard');
+            const list = document.getElementById('historyList');
+            
+            if (history.length === 0) {
+                card.style.display = 'none';
+                return;
+            }
+            
+            card.style.display = 'block';
+            list.innerHTML = history.map(item => `
+                <div class="history-item">
+                    <div class="history-info">
+                        <div class="history-date">${formatDate(item.timestamp)}</div>
+                        <div class="history-params">本金¥${formatNumber(item.principal)} · ${item.days}天 · 收益¥${formatNumber(item.profit)}</div>
+                    </div>
+                    <div class="history-result">
+                        <div class="history-rate ${item.apr >= 0 ? 'positive' : 'negative'}">
+                            ${item.apr >= 0 ? '+' : ''}${item.apr.toFixed(2)}%
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function clearHistory() {
+            history = [];
+            localStorage.removeItem('aprHistory');
+            updateHistoryUI();
+        }
+        
+        function formatDate(iso) {
+            const d = new Date(iso);
+            return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+        }
+        
+        function formatNumber(n) {
+            return n >= 10000 ? (n/10000).toFixed(1) + '万' : n.toFixed(0);
+        }
+        
+        // 添加 shake 动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-10px); }
+                75% { transform: translateX(10px); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // 回车键计算
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') calculate();
+            });
+        });
+        
+        // 注册 Service Worker (PWA)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('data:text/javascript,' + encodeURIComponent(`
+                self.addEventListener('install', e => self.skipWaiting());
+                self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+                self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+            `)).catch(() => {});
+        }
+    </script>
+</body>
+</html>
